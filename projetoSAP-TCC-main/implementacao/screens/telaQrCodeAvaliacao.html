@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Avaliação do Sistema</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background-color: #f0f0f0;
+    }
+
+    .formulario {
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 500px;
+    }
+
+    h1, h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    textarea {
+      display: block;
+      width: 100%;
+      margin-top: 5px;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .estrelas {
+      display: flex;
+      font-size: 32px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .estrela {
+      color: #ccc;
+      transition: color 0.3s;
+      padding: 0 3px;
+    }
+
+    .estrela.ativa {
+      color: gold;
+    }
+
+    button {
+      margin-top: 25px;
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+  
+  </style>
+</head>
+<body>
+
+  <form class="formulario" id="formAvaliacao">
+    <h1>Formulário de Avaliação</h1>
+
+    <label for="email">Seu e-mail:</label>
+    <input type="email" name="email" id="email" required />
+    <div class="erro" id="erro-email"></div>
+
+    <label>Avalie o Atendimento:</label>
+    <div class="estrelas" id="avaliacao-atendimento">
+      <span class="estrela" data-avaliacao="1">&#9733;</span>
+      <span class="estrela" data-avaliacao="2">&#9733;</span>
+      <span class="estrela" data-avaliacao="3">&#9733;</span>
+      <span class="estrela" data-avaliacao="4">&#9733;</span>
+      <span class="estrela" data-avaliacao="5">&#9733;</span>
+    </div>
+    <input type="hidden" name="nota_atendimento" id="nota-atendimento" />
+    <div class="erro" id="erro-nota-atendimento"></div>
+
+    <label>Avalie a Comida:</label>
+    <div class="estrelas" id="avaliacao-comida">
+      <span class="estrela" data-avaliacao="1">&#9733;</span>
+      <span class="estrela" data-avaliacao="2">&#9733;</span>
+      <span class="estrela" data-avaliacao="3">&#9733;</span>
+      <span class="estrela" data-avaliacao="4">&#9733;</span>
+      <span class="estrela" data-avaliacao="5">&#9733;</span>
+    </div>
+    <input type="hidden" name="nota_comida" id="nota-comida" />
+    <div class="erro" id="erro-nota-comida"></div>
+
+    <label for="observacoes">Dê seu feedback</label>
+    <textarea name="observacoes" id="observacoes"></textarea>
+
+    <button type="submit">Enviar Avaliação</button>
+  </form>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      configurarEstrelas("avaliacao-atendimento", "nota-atendimento");
+      configurarEstrelas("avaliacao-comida", "nota-comida");
+
+      function configurarEstrelas(containerId, inputId) {
+        const container = document.getElementById(containerId);
+        const estrelas = container.querySelectorAll('.estrela');
+        let selecionada = 0;
+
+        estrelas.forEach((estrela, index) => {
+          estrela.addEventListener('click', () => {
+            selecionada = index + 1;
+            atualizarEstrelas(estrelas, selecionada);
+            document.getElementById(inputId).value = selecionada;
+          });
+
+          estrela.addEventListener('mouseover', () => {
+            atualizarEstrelas(estrelas, index + 1);
+          });
+
+          estrela.addEventListener('mouseout', () => {
+            atualizarEstrelas(estrelas, selecionada);
+          });
+        });
+      }
+
+      function atualizarEstrelas(estrelas, n) {
+        estrelas.forEach((estrela, i) => {
+          estrela.classList.toggle('ativa', i < n);
+        });
+      }
+
+      // Submissão do formulário
+      document.getElementById("formAvaliacao").addEventListener("submit", async function (e) {
+        e.preventDefault();
+
+        if (!validarFormulario()) return;
+
+        const dados = {
+          email: document.getElementById("email").value.trim(),
+          nota_atendimento: document.getElementById("nota-atendimento").value,
+          nota_comida: document.getElementById("nota-comida").value,
+          observacoes: document.getElementById("observacoes").value.trim()
+        };
+
+        try {
+          const resposta = await fetch("https://suaapi.com/endpoint", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(dados)
+          });
+
+          if (!resposta.ok) throw new Error("Erro na resposta da API");
+
+          alert("Avaliação enviada com sucesso!");
+          this.reset();
+        } catch (erro) {
+          alert("Erro ao enviar a avaliação. Tente novamente.");
+          console.error(erro);
+        }
+      });
+    });
+
+    function validarFormulario() {
+      let valido = true;
+      document.querySelectorAll('.erro').forEach(div => div.textContent = '');
+
+      const email = document.getElementById("email").value.trim();
+      const notaAtendimento = document.getElementById("nota-atendimento").value;
+      const notaComida = document.getElementById("nota-comida").value;
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+      if (!email || !emailRegex.test(email)) {
+        document.getElementById("erro-email").textContent = "Informe um e-mail válido.";
+        valido = false;
+      }
+
+      if (!notaAtendimento) {
+        document.getElementById("erro-nota-atendimento").textContent = "Avalie o atendimento com estrelas.";
+        valido = false;
+      }
+
+      if (!notaComida) {
+        document.getElementById("erro-nota-comida").textContent = "Avalie a comida com estrelas.";
+        valido = false;
+      }
+
+      return valido;
+    }
+  </script>
+</body>
+</html>
